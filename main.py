@@ -35,7 +35,7 @@ try:
             x=api.get_status(tweet._json['id_str'])
             user_df=user_df.append({"User ID":tweet._json['user']['id'],"Username":tweet._json['user']['screen_name'],"Tweet ID":tweet._json['id'],"Created at":tweet._json['created_at'],"Text":x.text,"Likes":tweet._json['favorite_count'],"Retweets":tweet._json['retweet_count'],"Is Quote":int(tweet._json['is_quote_status']),"Is Retweet":int(tweet._json['retweeted'])},ignore_index=True)
             
-    user_df.set_index("User ID")
+    user_df.set_index("Tweet ID")
     c=cnxn.cursor()
     # Pulling information from tweets iterable object
     tweets_list = [[tweet.id, tweet.created_at.astimezone(pytz.timezone('Asia/Kolkata')), tweet.full_text,tweet._json['favorite_count'],tweet._json['retweet_count'],(datetime.datetime.utcnow()-tweet.created_at).total_seconds()/3600.00,3600.00*tweet._json['favorite_count']/(datetime.datetime.utcnow()-tweet.created_at).total_seconds(),3600.00*tweet._json['retweet_count']/(datetime.datetime.utcnow()-tweet.created_at).total_seconds()] for tweet in tweets]
@@ -46,10 +46,18 @@ try:
     tweets_df.columns = ["Tweet_ID","Created_Date","Text","Likes","Retweets","Elapsed (Hours)","Like Score","Retweet Score"]
     tweets_df = tweets_df[~tweets_df.Text.str.contains("RT")].reset_index(drop=True)
     for i,row in tweets_df.iterrows():
+        c.execute('SELECT TweetID FROM LIGHTHOUSE_BANKING.dbo.ZSG_Client_Tweets WHERE TweetID=?',(row["Tweet_ID"],))
+        d=c.fetchall()
+        if len(d)!=0:
+            continue
         c.execute('SET IDENTITY_INSERT LIGHTHOUSE_BANKING.dbo.ZSG_Client_Tweets ON')
         c.execute("INSERT INTO LIGHTHOUSE_BANKING.dbo.ZSG_Client_Tweets(TweetID,CreatedAt,Text,Likes,Retweets,Elapsed,LikeScore,RetweetScore)values(?,?,?,?,?,?,?,?)",(row["Tweet_ID"],row["Created_Date"],row["Text"],row["Likes"],row["Retweets"],row["Elapsed (Hours)"],row["Like Score"],row["Retweet Score"]))
         cnxn.commit()
     for i,row in user_df.iterrows():
+        c.execute('SELECT TweetID FROM LIGHTHOUSE_BANKING.dbo.ZSG_User_Tweets WHERE TweetID=?',(row["Tweet ID"],))
+        d=c.fetchall()
+        if len(d)!=0:
+            continue
         c.execute('SET IDENTITY_INSERT LIGHTHOUSE_BANKING.dbo.ZSG_User_Tweets ON')
         c.execute("INSERT INTO LIGHTHOUSE_BANKING.dbo.ZSG_User_Tweets(UserID,Username,TweetID,CreatedAt,Text,Likes,Retweets,IsQuote,IsRetweet)values(?,?,?,?,?,?,?,?,?)",(row["User ID"],row["Username"],row["Tweet ID"],row["Created at"],row["Text"],row["Likes"],row["Retweets"],row["Is Quote"],row["Is Retweet"]))
         cnxn.commit()
