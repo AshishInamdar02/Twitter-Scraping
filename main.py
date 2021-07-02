@@ -7,12 +7,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pypyodbc as py
 
-access_token = '1081082851271962625-FFLMBJFhZq4Sr6bU76epU8W0L9ScyP'
-access_token_secret = 'PXUDLUyaa2x4aw1wmKI8yYtRLcUBy1o2PlMZVMixIS0nC'
-consumer_key = 'U8rYt84Ateh1P0UkaZ2UX1M6N'
-consumer_secret = 'GhUfkhwczktlaU0aQ5Z0IOLqKxJrYp2CyPh5gSS1oV9aiaiOEe'
+access_token = '#########################'
+access_token_secret = '#########################'
+consumer_key = '#########################'
+consumer_secret = '#########################e'
 
-cnxn = py.connect('DRIVER={SQL Server};SERVER=lighthousebanking2.ceuzk9onxcdt.ap-south-1.rds.amazonaws.com,1521;DATABASE=LIGHTHOUSE_BANKING;UID=admin;PWD=lighthouse')
+cnxn = py.connect('DRIVER={SQL Server};SERVER=#########################;DATABASE=#########################;UID=#########################;PWD=#########################')
 cursor = cnxn.cursor()
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
