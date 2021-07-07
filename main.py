@@ -25,19 +25,19 @@ class Tweets:
         self.file=file
         self.filename=file+".csv"
         count = 100
-        df=pd.read_csv('Users.csv')
+        df=pd.read_csv(self.filename)
         df.rename(columns=df.iloc[0])
-        l=df['User ID'].tolist()
+        d=df.set_index('Customer ID').T.to_dict('list')
         try:
             # Creation of query method using parameters
             tweets = tweepy.Cursor(api.user_timeline, id=self.user, tweet_mode='extended').items(count)
-            col=["User ID","Username","Tweet ID","Created at","Text","Likes","Retweets","Is Quote","Is Retweet"]
+            col=["Customer ID","User ID","Username","Tweet ID","Created at","Text","Likes","Retweets","Is Quote","Is Retweet"]
             user_df=pd.DataFrame(columns=col)
-            for i in range(len(l)):
-                user_tweets = api.search(q='"ICICI Bank" OR @ICICIBank from:{0}'.format(l[i]))
+            for i in d.keys():
+                user_tweets = api.search(q='"ICICI Bank" OR @ICICIBank from:{0}'.format(d[i][0]))
                 for tweet in user_tweets:
                     x=api.get_status(tweet._json['id_str'])
-                    user_df=user_df.append({"User ID":tweet._json['user']['id'],"Username":tweet._json['user']['screen_name'],"Tweet ID":tweet._json['id'],"Created at":tweet._json['created_at'],"Text":x.text,"Likes":tweet._json['favorite_count'],"Retweets":tweet._json['retweet_count'],"Is Quote":int(tweet._json['is_quote_status']),"Is Retweet":int(tweet._json['retweeted'])},ignore_index=True)
+                    user_df=user_df.append({"Customer ID":i,"User ID":tweet._json['user']['id'],"Username":tweet._json['user']['screen_name'],"Tweet ID":tweet._json['id'],"Created at":tweet._json['created_at'],"Text":x.text,"Likes":tweet._json['favorite_count'],"Retweets":tweet._json['retweet_count'],"Is Quote":int(tweet._json['is_quote_status']),"Is Retweet":int(tweet._json['retweeted'])},ignore_index=True)
                   
             user_df.set_index("Tweet ID")
             c=cnxn.cursor()
@@ -63,7 +63,7 @@ class Tweets:
                 if len(d)!=0:
                     continue
                 c.execute('SET IDENTITY_INSERT LIGHTHOUSE_BANKING.dbo.ZSG_User_Tweets ON')
-                c.execute("INSERT INTO LIGHTHOUSE_BANKING.dbo.ZSG_User_Tweets(UserID,Username,TweetID,CreatedAt,Text,Likes,Retweets,IsQuote,IsRetweet)values(?,?,?,?,?,?,?,?,?)",(row["User ID"],row["Username"],row["Tweet ID"],row["Created at"],row["Text"],row["Likes"],row["Retweets"],row["Is Quote"],row["Is Retweet"]))
+                c.execute("INSERT INTO LIGHTHOUSE_BANKING.dbo.ZSG_User_Tweets(CustomerID,TwitterUserID,Username,TweetID,CreatedAt,Text,Likes,Retweets,IsQuote,IsRetweet)values(?,?,?,?,?,?,?,?,?,?)",(row["Customer ID"],row["User ID"],row["Username"],row["Tweet ID"],row["Created at"],row["Text"],row["Likes"],row["Retweets"],row["Is Quote"],row["Is Retweet"]))
                 cnxn.commit()
         except BaseException as e:
             print('failed on_status,', str(e))
